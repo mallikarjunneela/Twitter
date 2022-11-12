@@ -37,7 +37,7 @@ const convertStateDbObjectToResponseObject = (dbObject) => {
     gender: dbObject.gender,
   };
 };
-
+// API 1
 app.post("/register/", async (request, response) => {
   const { username, password, name, gender } = request.body;
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -63,6 +63,7 @@ app.post("/register/", async (request, response) => {
   }
 });
 
+// API 2
 app.post("/login/", async (request, response) => {
   const { username, password } = request.body;
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -92,7 +93,7 @@ app.post("/login/", async (request, response) => {
   }
 });
 
-
+// Authenticate with JWT Token
 function authenticateToken(request, response, next) {
   let jwtToken;
   const authHeader = request.headers["authorization"];
@@ -113,7 +114,7 @@ function authenticateToken(request, response, next) {
     });
   }
 }
-
+// API 3
 app.get("/user/tweets/feed/", async (request, response) => {
     const getUserQuery = `SELECT * FROM tweet;`;
     const tweetArray = await database.all(getUserQuery);
@@ -122,7 +123,7 @@ app.get("/user/tweets/feed/", async (request, response) => {
     );
 })
 
-
+// API 4
 app.get("/user/following/", async (request, response) => {
     const getUsersQuery = `SELECT * FROM user;`;
 
@@ -131,7 +132,7 @@ app.get("/user/following/", async (request, response) => {
     )
     );
 })
-
+// API 5
 app.get("/user/followers/", async (request, response) => {
     const getUsername = `SELECT * FROM user;`;
 
@@ -141,6 +142,10 @@ app.get("/user/followers/", async (request, response) => {
     );
 }
 
+// API 6
+app.get("/tweets/:tweetId/", async (request, response) => {
+
+})
 
 
 module.exports = app;
