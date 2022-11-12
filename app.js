@@ -147,5 +147,35 @@ app.get("/tweets/:tweetId/", async (request, response) => {
 
 })
 
+// API 7
+app.get("/tweets/:tweetId/likes", async (request, response) => {
+
+})
+
+// API 8
+app.get("/tweets/:tweetId/replies", async (request, response) => {
+
+})
+
+// API 9 
+app.get("/user/tweets/", async (request, response) => {
+
+})
+
+// API 10 
+app.post("/user/tweets/", async (request, response) => {
+    const {tweet} = request.body;
+    const postTweetQuery = `INSERT INTO tweet (tweet) VALUES ('${tweet}'`;
+
+    await database.run(postTweetQuery);
+    response.send("Created a Tweet");
+
+
+})
+
+// API 11
+app.delete("/tweets/:tweetId", async (request, response) => {
+
+})
 
 module.exports = app;
