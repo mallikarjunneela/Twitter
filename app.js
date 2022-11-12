@@ -40,20 +40,107 @@ const convertStateDbObjectToResponseObject = (dbObject) => {
 
 app.post("/register/", async (request, response) => {
   const { username, password, name, gender } = request.body;
-  const postRegisterQuery = `SELECT * FROM user WHERE username = '${username}';`;
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const postRegisterQuery = `SELECT * FROM user WHERE username = '${username}'`;
   const databaseUser = await database.get(postRegisterQuery);
+
+  if (databaseUser !== undefined) {
+    response.status(400);
+    response.send("User already exists");
+  } else {
+    if (password.length < 6) {
+      response.status(400);
+      response.send("Password is too short");
+    } else {
+      const registerNewUser = `INSERT INTO user (username, password, name, gender) 
+            VALUES ('${username}', '${hashedPassword}', '${name}', '${gender}')`;
+
+      await database.run(registerNewUser);
+      response.status(200);
+      response.send("User created successfully");
+    }
+  }
+});
+
+app.post("/login/", async (request, response) => {
+  const { username, password } = request.body;
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const postLoginQuery = `SELECT * FROM user WHERE username = '${username}'`;
+  const databaseUser = await database.get(postLoginQuery);
+
   if (databaseUser === undefined) {
     response.status(400);
     response.send("Invalid user");
   } else {
-    const isPasswordMatched = await bcrypt.compare(password, database.password);
+      const isPasswordMatched = await bcrypt.compare(
+      password,
+      databaseUser.password
+
     if (isPasswordMatched === true) {
-      const payload = { username: username };
-      const jwtToken = jwt.sign(payload, "MY_SECRET_TOKEN");
-      response.send({ jwtToken });
-    } else {
       response.status(400);
-      response.send("Invalid Password");
+      response.send("Invalid password");
+    } else {
+      const loginNewUser = `INSERT INTO user (username, password) 
+            VALUES ('${username}', '${hashedPassword}')`;
+
+      await database.run(LoginNewUser);
+      response.status(200);
+      response.send({ jwtToken });
     }
   }
 });
+
+
+function authenticateToken(request, response, next) {
+  let jwtToken;
+  const authHeader = request.headers["authorization"];
+  if (authHeader !== undefined) {
+    jwtToken = authHeader.split(" ")[1];
+  }
+  if (jwtToken === undefined) {
+    response.status(401);
+    response.send("Invalid JWT Token");
+  } else {
+    jwt.verify(jwtToken, "MY_SECRET_TOKEN", async (error, payload) => {
+      if (error) {
+        response.status(401);
+        response.send("Invalid JWT Token");
+      } else {
+        next();
+      }
+    });
+  }
+}
+
+app.get("/user/tweets/feed/", async (request, response) => {
+    const getUserQuery = `SELECT * FROM tweet;`;
+    const tweetArray = await database.all(getUserQuery);
+    response.send(tweetArray.map((eachTweet) => convertStateDbObjectToResponseObject(eachTweet)
+    )
+    );
+})
+
+
+app.get("/user/following/", async (request, response) => {
+    const getUsersQuery = `SELECT * FROM user;`;
+
+    const getUserArray = await database.get(getUsersQuery);
+    response.send(getUserArray.map((eachUser) => convertStateDbObjectToResponseObject(eachUser)
+    )
+    );
+})
+
+app.get("/user/followers/", async (request, response) => {
+    const getUsername = `SELECT * FROM user;`;
+
+    const getUsernameArray = await database.get(getUsername);
+    response.send(getUserArray.map((eachName) => convertStateDbObjectToResponseObject(eachName)
+    )
+    );
+}
+
+
+
+module.exports = app;
